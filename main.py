@@ -51,3 +51,11 @@ def haftalar_arasi(baslangic: str = Query(...), bitis: str = Query(...)):
 
     except ValueError:
         return {"hata": "Tarih formatı YYYY-MM-DD olmalıdır."}
+    
+@app.get("/robots.txt", response_class=FileResponse)
+def serve_robots():
+    return FileResponse("static/robots.txt")
+
+@app.get("/sitemap.xml", response_class=FileResponse)
+def serve_sitemap():
+    return FileResponse("static/sitemap.xml")
