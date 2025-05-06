@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Tarih girerek haftanın kaçıncı haftası olduğunu öğrenin. İki tarih arası hafta bilgilerini hesaplayın.">
+  <meta name="keywords" content="hafta hesaplayıcı, tarih haftası, hafta numarası, week calculator, ISO 8601, hafta, tarih">
+  <meta name="author" content="Ahmet">
+  <title>Hafta Hesaplayıcı | Tarih ile hafta no bul</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-indigo-100 to-blue-100 min-h-screen flex items-center justify-center px-4">
+    <div class="bg-white p-6 md:p-10 rounded-3xl shadow-2xl w-full max-w-xl transition-all duration-300">
+
+    <!-- Dil Seçimi -->
+    <div class="flex justify-between mb-6">
+      <h1 id="baslik" class="text-4xl font-bold text-gray-800">📅 Hafta Hesaplayıcı</h1>
+      <select id="dil" onchange="diliDegistir()" class="p-2 rounded-lg border border-gray-300 text-base">
+        <option value="tr">🇹🇷 Türkçe</option>
+        <option value="en">🇬🇧 English</option>
+      </select>
+    </div>
+
+    <!-- Mod Seçimi -->
+    <div class="mb-6">
+      <label class="text-lg font-semibold text-gray-700 block mb-2">İşlem Türü:</label>
+      <select id="modSecimi" onchange="moduDegistir()" class="p-3 rounded-lg w-full border border-gray-300">
+        <option value="tek">📅 Tek Tarih Hesaplama</option>
+        <option value="cift">📆 İki Tarih Arası Hesaplama</option>
+      </select>
+    </div>
+
+    <!-- Tek tarih -->
+    <div id="tekTarihFormu" class="mb-6">
+      <label for="tarih" id="tarihEtiket" class="block text-lg text-gray-700 mb-2">Bir tarih seçin:</label>
+      <input type="date" id="tarih" class="w-full p-4 text-lg border border-gray-300 rounded-xl mb-4">
+    </div>
+
+    <!-- Başlangıç ve Bitiş tarihi -->
+    <div id="ciftTarihFormu" class="mb-6 hidden">
+      <label class="block text-lg text-gray-700 mb-1">Başlangıç Tarihi:</label>
+      <input type="date" id="baslangic" class="w-full p-4 text-lg border border-gray-300 rounded-xl mb-4">
+      <label class="block text-lg text-gray-700 mb-1">Bitiş Tarihi:</label>
+      <input type="date" id="bitis" class="w-full p-4 text-lg border border-gray-300 rounded-xl">
+    </div>
+
+    <!-- Hesapla Butonu -->
+    <button onclick="haftayiHesapla()" id="buton" class="w-full text-xl bg-blue-500 text-white py-3 rounded-xl font-semibold hover:bg-blue-600 hover:scale-105 transition-all duration-300 shadow-md">
+      🔍 Hesapla
+    </button>
+
+    <!-- Sonuç Alanı -->
+    <div id="sonuc" class="mt-10 hidden text-lg text-gray-800 space-y-4"></div>
+  </div>
+
+  <script>
+    const metinler = {
+      tr: {
+        baslik: "📅 Hafta Hesaplayıcı",
+        tarihEtiket: "Bir tarih seçin:",
+        buton: "🔍 Hesapla",
+        hata: "Lütfen gerekli tarih(leri) girin.",
+        sonuc_girilen: "📆 Girilen Tarih",
+        sonuc_hafta: "📅 Hafta No",
+        sonuc_yil: "🗓️ Yıl",
+        sonuc_bas: "🟢 Hafta Başlangıcı",
+        sonuc_bit: "🔴 Hafta Bitişi",
+        sonuc_adet: "hafta bulundu"
+      },
+      en: {
+        baslik: "📅 Week Calculator",
+        tarihEtiket: "Select a date:",
+        buton: "🔍 Calculate",
+        hata: "Please enter the required date(s).",
+        sonuc_girilen: "📆 Selected Date",
+        sonuc_hafta: "📅 Week Number",
+        sonuc_yil: "🗓️ Year",
+        sonuc_bas: "🟢 Week Start",
+        sonuc_bit: "🔴 Week End",
+        sonuc_adet: "weeks found"
+      }
+    };
+
+    function diliDegistir() {
+      const lang = document.getElementById("dil").value;
+      const m = metinler[lang];
+      document.getElementById("baslik").innerText = m.baslik;
+      document.getElementById("tarihEtiket").innerText = m.tarihEtiket;
+      document.getElementById("buton").innerText = m.buton;
+    }
+
+    function moduDegistir() {
+      const secim = document.getElementById("modSecimi").value;
+      document.getElementById("tekTarihFormu").classList.toggle("hidden", secim !== "tek");
+      document.getElementById("ciftTarihFormu").classList.toggle("hidden", secim !== "cift");
+      document.getElementById("sonuc").classList.add("hidden");
+    }
+
+    async function haftayiHesapla() {
+      const mod = document.getElementById("modSecimi").value;
+      const lang = document.getElementById("dil").value;
+      const m = metinler[lang];
+      const sonuc = document.getElementById("sonuc");
+
+      sonuc.innerHTML = "";
+      sonuc.classList.add("hidden");
+
+      if (mod === "tek") {
+        const tarih = document.getElementById("tarih").value;
+        if (!tarih) return alert(m.hata);
+
+        const response = await fetch(`/hafta?tarih=${tarih}`);
+        const data = await response.json();
+
+        if (data.hata) return alert(data.hata);
+
+        sonuc.innerHTML = `
+          <div class="bg-gray-100 p-4 rounded-xl shadow-sm border border-gray-300 space-y-1">
+            <p><strong>${m.sonuc_girilen}:</strong> ${data.girdigin_tarih}</p>
+            <p><strong>${m.sonuc_hafta}:</strong> ${data.hafta_numarasi}</p>
+            <p><strong>${m.sonuc_yil}:</strong> ${data.yil}</p>
+            <p><strong>${m.sonuc_bas}:</strong> ${data.hafta_baslangic}</p>
+            <p><strong>${m.sonuc_bit}:</strong> ${data.hafta_bitis}</p>
+          </div>
+        `;
+      } else {
+        const b = document.getElementById("baslangic").value;
+        const t = document.getElementById("bitis").value;
+        if (!b || !t) return alert(m.hata);
+
+        const response = await fetch(`/haftalar_arasi?baslangic=${b}&bitis=${t}`);
+        const data = await response.json();
+
+        if (data.hata) return alert(data.hata);
+
+        sonuc.innerHTML = `<p><strong>${data.adet} ${m.sonuc_adet}:</strong></p><div class="space-y-4">`;
+
+        data.haftalar.forEach((hafta) => {
+          const kart = `
+            <div class="bg-gray-100 p-4 rounded-xl shadow-sm border border-gray-300">
+              <p><strong>${m.sonuc_yil}:</strong> ${hafta.yil}</p>
+              <p><strong>${m.sonuc_hafta}:</strong> ${hafta.hafta_numarasi}</p>
+              <p><strong>${m.sonuc_bas}:</strong> ${hafta.hafta_baslangic}</p>
+              <p><strong>${m.sonuc_bit}:</strong> ${hafta.hafta_bitis}</p>
+            </div>
+          `;
+          sonuc.innerHTML += kart;
+        });
+
+        sonuc.innerHTML += "</div>";
+      }
+
+      sonuc.classList.remove("hidden");
+    }
+
+    window.onload = () => {
+      diliDegistir();
+      moduDegistir();
+    };
+  </script>
+</body>
+</html>
